@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { submitComment } from '../services';
 
 function CommentsForm({ slug }) {
   const [error, setError] = useState(false);
@@ -9,12 +10,17 @@ function CommentsForm({ slug }) {
   const emailEl = useRef();
   const storeDataEl = useRef();
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    nameEl.current.value = window.localStorage.getItem('name');
+    emailEl.current.value = window.localStorage.getItem('email');
+  }, []);
   const handleCommentSubmission = () => {
     setError(false);
-    const { vaue: comment } = commentEl.current;
-    const { vaue: name } = nameEl.current;
-    const { vaue: email } = emailEl.current;
+    const { value: comment } = commentEl.current;
+    const { value: name } = nameEl.current;
+    const { value: email } = emailEl.current;
+    const { checked: storeData } = storeDataEl.current;
+
     if (!comment || !name || !email) {
       setError(true);
       return;
@@ -25,12 +31,25 @@ function CommentsForm({ slug }) {
       comment,
       slug,
     };
+    if (storeData) {
+      window.localStorage.setItem('name', name);
+      window.localStorage.setItem('email', email);
+    } else {
+      window.localStorage.removeItem('email', email);
+      window.localStorage.removeItem('name', name);
+    }
+    submitComment(commentObj).then((res) => {
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+    });
   };
 
   return (
     <div className="bg-white shadow-lg p-8 pb-12 mb-8">
       <h3 className="text-xl mb-8 font-semibold border-b pb-4">
-        Comments Forms
+        Leave a reply
       </h3>
       <div className="grid grid-cols-1 gap-4 mb-4">
         <textarea
@@ -59,8 +78,19 @@ function CommentsForm({ slug }) {
       </div>
       <div className="grid grid-cols-1 gap-4 mb-4">
         <div className="">
-          <input type="checkbox" ref={storeDataEl} name="storeData" id="storeData" value="true" />
-          <label className="text-gray-500 cursor-pointer " htmlFor="storeData">Save my email and name for the next time i comment </label>
+          <input
+            type="checkbox"
+            ref={storeDataEl}
+            name="storeData"
+            id="storeData"
+            value="true"
+          />
+          <label
+            className="text-gray-500 cursor-pointer ml-2"
+            htmlFor="storeData"
+          >
+            Save my email and name for the next time i comment{' '}
+          </label>
         </div>
       </div>
       {error && (
